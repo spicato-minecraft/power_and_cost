@@ -48,11 +48,11 @@ public class EnchantScreenClientGameTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         try (var world = context.worldBuilder().create()) {
-            world.getClientLevel().waitForChunksDownload();
+            world.getConnection().waitForChunksDownload();
             world.getServer().runOnServer(server -> openMaxedTable(server.getPlayerList().getPlayers().getFirst()));
             context.waitForScreen(EnchantmentScreen.class);
             context.waitFor(client -> {
-                if (!(client.screen instanceof EnchantmentScreen screen)) {
+                if (!(client.gui.screen() instanceof EnchantmentScreen screen)) {
                     return false;
                 }
                 EnchantmentMenu menu = screen.getMenu();
@@ -66,7 +66,7 @@ public class EnchantScreenClientGameTest implements FabricClientGameTest {
             });
 
             context.runOnClient(client -> {
-                if (!(client.screen instanceof EnchantmentScreen screen)) {
+                if (!(client.gui.screen() instanceof EnchantmentScreen screen)) {
                     throw new AssertionError("Expected the enchanting screen");
                 }
                 var player = client.player;

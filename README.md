@@ -4,9 +4,9 @@ A Minecraft Fabric mod for enchanted gear maintenance and modification cost-powe
 
 ## Compatibility
 
-- **Minecraft:** 26.1
-- **Fabric Loader:** ≥ 0.19.3
-- **Fabric API:** 0.145.1+26.1
+- **Minecraft:** 26.2
+- **Fabric Loader:** ≥ 0.19.5
+- **Fabric API:** 0.161.0+26.2
 - **Java:** ≥ 25
 
 ## Build Instructions
@@ -21,7 +21,7 @@ The built JAR will be in `build/libs/`.
 
 ## Installation
 
-1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft 26.1
+1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft 26.2
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
 3. Copy the built `power_and_cost-*.jar` from `build/libs/` into your Minecraft `mods` folder
 
@@ -29,7 +29,7 @@ The built JAR will be in `build/libs/`.
 
 Each supported Minecraft version has its own long-lived branch named after the exact `minecraft_version` in `gradle.properties` (e.g. `1.21.10`). Version branches are the source of truth; `main` is not used.
 
-- **Default branch:** `26.1` (also `1.21.11` for the prior game release)
+- **Default branch:** `26.2` (also `26.1` for the prior game release)
 - **Feature/fix work:** branch from the target version as `{version}/feature-name`, merge back into the version branch
 - **New MC version:** create `{version}` from the prior version branch, bump `gradle.properties`, push to origin
 - **Retiring a version:** tag the final release, then archive the branch (do not delete)
@@ -37,7 +37,7 @@ Each supported Minecraft version has its own long-lived branch named after the e
 ```bash
 git clone https://github.com/spicato-minecraft/power_and_cost.git
 cd power_and_cost
-git checkout 26.1
+git checkout 26.2
 ```
 
 ## Releases and Modrinth

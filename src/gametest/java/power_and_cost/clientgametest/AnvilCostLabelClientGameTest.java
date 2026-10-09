@@ -29,14 +29,14 @@ public class AnvilCostLabelClientGameTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         try (var world = context.worldBuilder().create()) {
-            world.getClientLevel().waitForChunksDownload();
+            world.getConnection().waitForChunksDownload();
             world.getServer().runOnServer(server -> openExpensiveAnvil(server.getPlayerList().getPlayers().getFirst()));
             context.waitForScreen(AnvilScreen.class);
             context.waitFor(client ->
-                    client.screen instanceof AnvilScreen screen && screen.getMenu().getCost() > 40
+                    client.gui.screen() instanceof AnvilScreen screen && screen.getMenu().getCost() > 40
             );
             context.runOnClient(client -> {
-                if (!(client.screen instanceof AnvilScreen screen)) {
+                if (!(client.gui.screen() instanceof AnvilScreen screen)) {
                     throw new AssertionError("Expected the anvil screen");
                 }
                 if (client.player == null) {
