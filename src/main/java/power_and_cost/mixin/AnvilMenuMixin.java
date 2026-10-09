@@ -25,12 +25,12 @@ import java.util.Objects;
 @Mixin(AnvilMenu.class)
 public abstract class AnvilMenuMixin {
 
-    @Shadow(remap = false)
+    @Shadow
     @Final
-    private DataSlot field_7770; // cost
+    private DataSlot cost;
 
-    @Shadow(remap = false)
-    private int field_7776; // repairItemCountCost
+    @Shadow
+    private int repairItemCountCost;
 
     @Unique
     private static final int RENAME_COST = 1;
@@ -65,7 +65,7 @@ public abstract class AnvilMenuMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/DataSlot;set(I)V")
     )
     private void power_and_cost_redirectCostSet(DataSlot slot, int vanillaValue) {
-        if (slot != field_7770) {
+        if (slot != cost) {
             slot.set(vanillaValue);
             return;
         }
@@ -89,19 +89,19 @@ public abstract class AnvilMenuMixin {
         int leftEnchant = calc.computeEnchantmentPowerValue(left);
 
         if (right.isEmpty()) {
-            field_7776 = 0;
-            field_7770.set(computeOurCost());
+            repairItemCountCost = 0;
+            cost.set(computeOurCost());
             return;
         }
 
         if (right.is(Items.ENCHANTED_BOOK)) {
-            field_7776 = 0;
-            field_7770.set(computeOurCost());
+            repairItemCountCost = 0;
+            cost.set(computeOurCost());
             return;
         }
 
         if (left.getItem() == right.getItem()) {
-            field_7776 = 0;
+            repairItemCountCost = 0;
             double factor = formulas.durabilityRepairFactor(leftEnchant);
             scaleResultDurability(left, result, factor);
             return;
@@ -111,7 +111,7 @@ public abstract class AnvilMenuMixin {
         boolean isRepairMaterial = repairable != null && repairable.items().stream()
                 .anyMatch(holder -> holder.value() == right.getItem());
         if (isRepairMaterial) {
-            field_7776 = 1;
+            repairItemCountCost = 1;
             double factor = formulas.durabilityRepairFactor(leftEnchant);
             scaleResultDurability(left, result, factor);
             return;

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(AnvilScreen.class)
 public abstract class AnvilScreenMixin {
 
-    @ModifyConstant(method = "renderLabels", constant = @Constant(intValue = 40))
+    @ModifyConstant(method = "extractLabels", constant = @Constant(intValue = 40))
     private int gear_maintenance_raiseTooExpensiveThreshold(int constant) {
         return Integer.MAX_VALUE;
     }

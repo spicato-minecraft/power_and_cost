@@ -50,14 +50,30 @@ public class EnchantingTableCostGameTest {
             EnchantmentGameTestHelper.TableSession session
     ) {
         EnchantmentMenu menu = session.menu();
-        int slot = EnchantmentGameTestHelper.firstPricedSlot(menu);
+        int[] xpCosts = ((TableXpCostAccess) menu).power_and_cost$xpCosts();
+        int slot = -1;
+        int cost = 0;
+        for (int candidate = 0; candidate < 3; candidate++) {
+            if (menu.costs[candidate] <= 0) {
+                continue;
+            }
+            int xp = xpCosts[candidate];
+            int lapis = candidate + 1;
+            if (xp != lapis) {
+                slot = candidate;
+                cost = xp;
+                break;
+            }
+        }
         if (slot < 0) {
             throw AnvilGameTestHelper.fail(
-                    "Expected a priced table slot, costs="
+                    "Every priced slot's XP cost equals its lapis count, so a lapis deduction would look like an XP payment. costs="
                             + menu.costs[0] + "," + menu.costs[1] + "," + menu.costs[2]
             );
         }
-        int cost = ((TableXpCostAccess) menu).power_and_cost$xpCosts()[slot];
+        if (session.player().experienceLevel < cost) {
+            session.player().experienceLevel = cost;
+        }
         int levelsBefore = session.player().experienceLevel;
         boolean clicked = menu.clickMenuButton(session.player(), slot);
         if (!clicked) {

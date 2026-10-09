@@ -12,12 +12,22 @@
 			"power_and_cost.gametest.CostCapRemovedGameTest",
 			"power_and_cost.gametest.DurabilityRoundingGameTest",
 			"power_and_cost.gametest.EnchantmentPowerLevelGameTest",
-			"power_and_cost.gametest.EnchantingTableCostGameTest"
+			"power_and_cost.gametest.EnchantingTableCostGameTest",
+			"power_and_cost.gametest.SameItemCombineCostGameTest",
+			"power_and_cost.gametest.MaterialRepairGameTest",
+			"power_and_cost.gametest.CombineRenameCostGameTest",
+			"power_and_cost.gametest.TableClickRejectedGameTest",
+			"power_and_cost.gametest.BookshelfRefreshGameTest"
+		],
+		"fabric-client-gametest": [
+			"power_and_cost.clientgametest.ClientMixinApplySweepGameTest",
+			"power_and_cost.clientgametest.AnvilCostLabelClientGameTest",
+			"power_and_cost.clientgametest.EnchantScreenClientGameTest"
 		]
 	},
 	"depends": {
 		"power_and_cost": "*",
 		"fabric-api": "*",
-		"minecraft": "~1.21.11"
+		"minecraft": "~26.1"
 	}
 }

@@ -3,7 +3,7 @@ package power_and_cost.mixin.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
 import net.minecraft.network.chat.Component;
@@ -46,14 +46,14 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
     }
 
     @Redirect(
-            method = "renderBg",
+            method = "extractBackground",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
             )
     )
     private void power_and_cost_drawOrbAndXp(
-            GuiGraphics graphics,
+            GuiGraphicsExtractor graphics,
             RenderPipeline pipeline,
             Identifier sprite,
             int x,
@@ -74,7 +74,7 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
             return;
         }
         String text = Integer.toString(xp);
-        graphics.drawString(
+        graphics.text(
                 this.font,
                 text,
                 x + 11,
@@ -85,7 +85,7 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
     }
 
     @Redirect(
-            method = "render",
+            method = "extractRenderState",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/network/chat/Component;translatable(Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;"
@@ -103,7 +103,7 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
     }
 
     @Redirect(
-            method = "render",
+            method = "extractRenderState",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/network/chat/Component;translatable(Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;"
@@ -124,7 +124,7 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
      * Gray out a row if the player cannot pay PL XP, without changing the right-side requirement numeral.
      */
     @ModifyExpressionValue(
-            method = "renderBg",
+            method = "extractBackground",
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/client/player/LocalPlayer;experienceLevel:I"

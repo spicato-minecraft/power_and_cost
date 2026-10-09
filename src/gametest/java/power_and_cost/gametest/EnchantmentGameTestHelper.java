@@ -48,6 +48,23 @@ final class EnchantmentGameTestHelper {
         menu.getSlot(1).set(new ItemStack(Items.LAPIS_LAZULI, lapisCount));
     }
 
+    static java.util.List<BlockPos> bookshelfPositions() {
+        BlockPos tableRel = new BlockPos(3, 1, 3);
+        java.util.List<BlockPos> positions = new java.util.ArrayList<>();
+        for (BlockPos offset : EnchantingTableBlock.BOOKSHELF_OFFSETS) {
+            positions.add(tableRel.offset(offset));
+        }
+        return positions;
+    }
+
+    static void clearBookshelves(GameTestHelper context) {
+        BlockPos tableRel = new BlockPos(3, 1, 3);
+        for (BlockPos offset : EnchantingTableBlock.BOOKSHELF_OFFSETS) {
+            BlockPos shelfRel = tableRel.offset(offset);
+            context.setBlock(shelfRel.getX(), shelfRel.getY(), shelfRel.getZ(), Blocks.AIR.defaultBlockState());
+        }
+    }
+
     static int firstPricedSlot(EnchantmentMenu menu) {
         for (int slot = 0; slot < 3; slot++) {
             if (menu.costs[slot] > 0) {

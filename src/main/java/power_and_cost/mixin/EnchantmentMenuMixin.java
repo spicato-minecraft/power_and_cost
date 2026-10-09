@@ -46,15 +46,14 @@ public abstract class EnchantmentMenuMixin implements TableXpCostAccess {
     private ContainerLevelAccess access;
 
     @Shadow
-    protected abstract List<EnchantmentInstance> getEnchantmentList(
+    private List<EnchantmentInstance> getEnchantmentList(
             RegistryAccess registryAccess,
             ItemStack stack,
             int slot,
             int enchantmentPower
-    );
-
-    @Shadow
-    protected abstract void method_17411(ItemStack stack, Level level, BlockPos pos);
+    ) {
+        throw new AssertionError();
+    }
 
     @Unique
     private final int[] power_and_cost$xpCosts = new int[3];
@@ -78,26 +77,39 @@ public abstract class EnchantmentMenuMixin implements TableXpCostAccess {
         access.invokeAddDataSlot(DataSlot.shared(power_and_cost$xpCosts, 2));
     }
 
-    @Inject(method = "method_17411", at = @At("TAIL"))
-    private void power_and_cost_fillXpCosts(ItemStack stack, Level level, BlockPos pos, CallbackInfo ci) {
-        power_and_cost$lastBookshelfCount = power_and_cost$countBookshelves(level, pos);
-        TableEnchantCost table = new TableEnchantCost(
-                PowerAndCost.POWER_LEVEL_CALCULATOR,
-                new AnvilCostFormulas(PowerAndCost.POWER_LEVEL_CONFIG)
-        );
-        for (int slot = 0; slot < 3; slot++) {
-            if (costs[slot] <= 0) {
-                power_and_cost$xpCosts[slot] = 0;
-                continue;
-            }
-            List<EnchantmentInstance> offered = getEnchantmentList(
-                    level.registryAccess(),
-                    stack,
-                    slot,
-                    costs[slot]
-            );
-            power_and_cost$xpCosts[slot] = offered.isEmpty() ? 0 : table.slotCost(stack, offered);
+    @Inject(method = "slotsChanged", at = @At("TAIL"))
+    private void power_and_cost_fillXpCosts(Container container, CallbackInfo ci) {
+        if (container != this.enchantSlots) {
+            return;
         }
+        ItemStack stack = this.enchantSlots.getItem(0);
+        if (stack.isEmpty() || !stack.isEnchantable()) {
+            power_and_cost$lastBookshelfCount = -1;
+            for (int slot = 0; slot < 3; slot++) {
+                power_and_cost$xpCosts[slot] = 0;
+            }
+            return;
+        }
+        this.access.execute((level, pos) -> {
+            power_and_cost$lastBookshelfCount = power_and_cost$countBookshelves(level, pos);
+            TableEnchantCost table = new TableEnchantCost(
+                    PowerAndCost.POWER_LEVEL_CALCULATOR,
+                    new AnvilCostFormulas(PowerAndCost.POWER_LEVEL_CONFIG)
+            );
+            for (int slot = 0; slot < 3; slot++) {
+                if (costs[slot] <= 0) {
+                    power_and_cost$xpCosts[slot] = 0;
+                    continue;
+                }
+                List<EnchantmentInstance> offered = getEnchantmentList(
+                        level.registryAccess(),
+                        stack,
+                        slot,
+                        costs[slot]
+                );
+                power_and_cost$xpCosts[slot] = offered.isEmpty() ? 0 : table.slotCost(stack, offered);
+            }
+        });
     }
 
     @Inject(method = "stillValid", at = @At("HEAD"))
@@ -109,7 +121,8 @@ public abstract class EnchantmentMenuMixin implements TableXpCostAccess {
             }
             int shelves = power_and_cost$countBookshelves(level, pos);
             if (shelves != power_and_cost$lastBookshelfCount) {
-                method_17411(stack, level, pos);
+                power_and_cost$lastBookshelfCount = shelves;
+                ((EnchantmentMenu) (Object) this).slotsChanged(enchantSlots);
             }
         });
     }
@@ -130,7 +143,7 @@ public abstract class EnchantmentMenuMixin implements TableXpCostAccess {
     }
 
     @ModifyArg(
-            method = "method_17410",
+            method = "lambda$clickMenuButton$0",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/player/Player;onEnchantmentPerformed(Lnet/minecraft/world/item/ItemStack;I)V"

@@ -3,6 +3,7 @@ package power_and_cost.gametest;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestAssertException;
@@ -40,7 +41,14 @@ public final class AnvilGameTestHelper {
         }
     }
 
+    public record AnvilSession(AnvilMenu menu, ServerPlayer player) {
+    }
+
     public static AnvilMenu openAnvilMenu(GameTestHelper context) {
+        return openAnvil(context).menu();
+    }
+
+    public static AnvilSession openAnvil(GameTestHelper context) {
         buildFloor(context, 3);
         BlockPos anvilPos = context.absolutePos(new BlockPos(1, 1, 1));
         context.setBlock(anvilPos, Blocks.ANVIL.defaultBlockState());
@@ -48,7 +56,7 @@ public final class AnvilGameTestHelper {
         ServerLevel level = context.getLevel();
         ServerPlayer player = createOffWorldPlayer(level);
         ContainerLevelAccess access = ContainerLevelAccess.create(level, anvilPos);
-        return new AnvilMenu(0, player.getInventory(), access);
+        return new AnvilSession(new AnvilMenu(0, player.getInventory(), access), player);
     }
 
     private static ServerPlayer createOffWorldPlayer(ServerLevel level) {
@@ -86,8 +94,16 @@ public final class AnvilGameTestHelper {
             ResourceKey<Enchantment> enchantmentKey,
             int level
     ) {
-        Holder<Enchantment> holder = context.getLevel()
-                .registryAccess()
+        return enchant(context.getLevel().registryAccess(), stack, enchantmentKey, level);
+    }
+
+    public static ItemStack enchant(
+            RegistryAccess registries,
+            ItemStack stack,
+            ResourceKey<Enchantment> enchantmentKey,
+            int level
+    ) {
+        Holder<Enchantment> holder = registries
                 .lookupOrThrow(Registries.ENCHANTMENT)
                 .getOrThrow(enchantmentKey);
         ItemEnchantments existing = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -102,9 +118,16 @@ public final class AnvilGameTestHelper {
             ResourceKey<Enchantment> enchantmentKey,
             int level
     ) {
+        return enchantedBook(context.getLevel().registryAccess(), enchantmentKey, level);
+    }
+
+    public static ItemStack enchantedBook(
+            RegistryAccess registries,
+            ResourceKey<Enchantment> enchantmentKey,
+            int level
+    ) {
         ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-        Holder<Enchantment> holder = context.getLevel()
-                .registryAccess()
+        Holder<Enchantment> holder = registries
                 .lookupOrThrow(Registries.ENCHANTMENT)
                 .getOrThrow(enchantmentKey);
         ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
