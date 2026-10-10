@@ -17,7 +17,10 @@
 			"power_and_cost.gametest.MaterialRepairGameTest",
 			"power_and_cost.gametest.CombineRenameCostGameTest",
 			"power_and_cost.gametest.TableClickRejectedGameTest",
-			"power_and_cost.gametest.BookshelfRefreshGameTest"
+			"power_and_cost.gametest.BookshelfRefreshGameTest",
+			"power_and_cost.gametest.ServerMixinApplySweepGameTest",
+			"power_and_cost.gametest.SurvivalAnvilGameTest",
+			"power_and_cost.gametest.CreativeTableSkipsXpGameTest"
 		],
 		"fabric-client-gametest": [
 			"power_and_cost.clientgametest.ClientMixinApplySweepGameTest",
