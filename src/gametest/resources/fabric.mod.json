@@ -14,6 +14,7 @@
 			"power_and_cost.gametest.EnchantmentPowerLevelGameTest",
 			"power_and_cost.gametest.EnchantingTableCostGameTest",
 			"power_and_cost.gametest.SameItemCombineCostGameTest",
+			"power_and_cost.gametest.LikeItemTransferGameTest",
 			"power_and_cost.gametest.MaterialRepairGameTest",
 			"power_and_cost.gametest.CombineRenameCostGameTest",
 			"power_and_cost.gametest.TableClickRejectedGameTest",

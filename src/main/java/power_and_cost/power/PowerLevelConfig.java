@@ -32,6 +32,7 @@ public final class PowerLevelConfig {
     private double repairSteepness = 0.035;
 
     private static final int DEFAULT_UNKNOWN_ENCHANT = 4;
+    private static final int DEFAULT_UNKNOWN_CRAFT_COST = 1;
 
     public PowerLevelConfig() {
         loadDefaults();
@@ -178,6 +179,47 @@ public final class PowerLevelConfig {
         return itemPowerValues.getOrDefault(itemId, 0);
     }
 
+    /**
+     * Primary material count in the item's crafting recipe (ingot/leather/plank equivalent).
+     * Tiered tools and armor infer from registry id when not listed explicitly.
+     */
+    public int getItemCraftCost(String itemId) {
+        return inferCraftCostFromId(itemId);
+    }
+
+    private static int inferCraftCostFromId(String itemId) {
+        String path = itemId.contains(":") ? itemId.substring(itemId.indexOf(':') + 1) : itemId;
+        if (path.endsWith("_shovel")) {
+            return 1;
+        }
+        if (path.endsWith("_hoe") || path.endsWith("_sword")) {
+            return 2;
+        }
+        if (path.endsWith("_pickaxe") || path.endsWith("_axe")) {
+            return 3;
+        }
+        if (path.endsWith("_boots")) {
+            return 4;
+        }
+        if (path.endsWith("_helmet") || path.equals("turtle_helmet")) {
+            return 5;
+        }
+        if (path.endsWith("_leggings")) {
+            return 7;
+        }
+        if (path.endsWith("_chestplate")) {
+            return 8;
+        }
+        return switch (path) {
+            case "bow", "crossbow" -> 3;
+            case "fishing_rod", "shield", "shears" -> 2;
+            case "trident" -> 3;
+            case "elytra" -> 8;
+            case "carrot_on_a_stick", "warped_fungus_on_a_stick" -> 1;
+            default -> DEFAULT_UNKNOWN_CRAFT_COST;
+        };
+    }
+
     public int getEnchantmentPower(Holder<Enchantment> holder, int level) {
         String id = holder.unwrapKey().map(k -> k.identifier().toString()).orElse("");
         return getEnchantmentPower(id, level);
@@ -201,4 +243,5 @@ public final class PowerLevelConfig {
     public double getRepairMax() { return repairMax; }
     public int getRepairMidpoint() { return repairMidpoint; }
     public double getRepairSteepness() { return repairSteepness; }
+
 }

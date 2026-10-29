@@ -30,6 +30,15 @@ public final class PowerLevelCalculator {
         return config.getItemPower(itemId);
     }
 
+    /** Craft recipe material count used to scale anvil material repair cost. */
+    public int computeItemCraftCost(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        return config.getItemCraftCost(itemId);
+    }
+
     /**
      * Enchantment power value only (excludes material).
      */
