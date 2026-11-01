@@ -5,8 +5,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Extra anvil repair materials for netherite gear.
+ * Anvil repair materials for netherite gear.
  * Diamonds restore half the usual durability per unit. Netherite scraps restore twice as much.
+ * Netherite ingots are not a repair material; they stay for upgrading gear.
  */
 public final class NetheriteRepairMaterials {
 
@@ -20,6 +21,11 @@ public final class NetheriteRepairMaterials {
 
     public static boolean isAlternateMaterial(ItemStack gear, ItemStack material) {
         return efficacy(gear, material) > 0;
+    }
+
+    /** Vanilla treats netherite ingots as the repair item. This mod does not. */
+    public static boolean isRejectedIngot(ItemStack gear, ItemStack material) {
+        return isNetheriteGear(gear) && !material.isEmpty() && material.is(Items.NETHERITE_INGOT);
     }
 
     /**

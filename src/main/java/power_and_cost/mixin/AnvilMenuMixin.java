@@ -138,6 +138,11 @@ public abstract class AnvilMenuMixin {
             return;
         }
 
+        if (NetheriteRepairMaterials.isRejectedIngot(left, right)) {
+            rejectNetheriteIngotRepair(self);
+            return;
+        }
+
         if (result.isEmpty()) {
             if (NetheriteRepairMaterials.isAlternateMaterial(left, right)) {
                 applyNetheriteAlternateRepair(self, left, right);
@@ -229,13 +234,31 @@ public abstract class AnvilMenuMixin {
 
     @Unique
     private static boolean isRepairMaterial(ItemStack left, ItemStack right) {
+        if (NetheriteRepairMaterials.isRejectedIngot(left, right)) {
+            return false;
+        }
         return left.isDamageableItem()
                 && (left.isValidRepairItem(right) || NetheriteRepairMaterials.isAlternateMaterial(left, right));
     }
 
     /**
+     * Vanilla offers a netherite-ingot repair. Clear it so ingots stay for smithing upgrades.
+     */
+    @Unique
+    private void rejectNetheriteIngotRepair(AbstractContainerMenu self) {
+        power_and_cost$applyingTransfer = true;
+        try {
+            self.getSlot(RESULT_SLOT_INDEX).set(ItemStack.EMPTY);
+            repairItemCountCost = 0;
+            cost.set(0);
+        } finally {
+            power_and_cost$applyingTransfer = false;
+        }
+    }
+
+    /**
      * Vanilla rejects diamonds and netherite scraps as netherite repair materials, so the result
-     * slot is empty. Fill it here using the same material-repair math as a normal ingot repair.
+     * slot is empty. Fill it here using the same material-repair math as other gear.
      */
     @Unique
     private void applyNetheriteAlternateRepair(AbstractContainerMenu self, ItemStack left, ItemStack right) {

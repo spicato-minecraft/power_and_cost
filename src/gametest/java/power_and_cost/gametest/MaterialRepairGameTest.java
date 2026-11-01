@@ -215,8 +215,27 @@ public class MaterialRepairGameTest {
     }
 
     @GameTest(maxTicks = 200)
-    public void netheriteIngotRepairStaysOnTheCurrentRate(GameTestHelper context) {
-        expectNetheriteRepair(context, Items.NETHERITE_INGOT, 1.0);
+    public void netheriteIngotDoesNotRepairNetheriteGear(GameTestHelper context) {
+        AnvilGameTestHelper.AnvilSession session = AnvilGameTestHelper.openAnvil(context);
+        AnvilMenu menu = session.menu();
+
+        ItemStack chestplate = new ItemStack(Items.NETHERITE_CHESTPLATE);
+        chestplate.setDamageValue((int) (chestplate.getMaxDamage() * 0.9));
+        AnvilGameTestHelper.populateAnvil(menu, chestplate, new ItemStack(Items.NETHERITE_INGOT, 8), null);
+
+        context.succeedWhen(() -> {
+            if (!AnvilGameTestHelper.resultStack(menu).isEmpty()) {
+                throw AnvilGameTestHelper.fail("Netherite ingots should not repair netherite gear");
+            }
+            if (menu.getCost() != 0) {
+                throw AnvilGameTestHelper.fail("Expected no anvil cost, got " + menu.getCost());
+            }
+            if (reflectRepairItemCountCost(menu) != 0) {
+                throw AnvilGameTestHelper.fail(
+                        "Expected no ingots consumed, cost " + reflectRepairItemCountCost(menu)
+                );
+            }
+        });
     }
 
     @GameTest(maxTicks = 200)
