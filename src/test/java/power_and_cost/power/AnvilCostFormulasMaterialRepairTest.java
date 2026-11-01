@@ -29,8 +29,45 @@ class AnvilCostFormulasMaterialRepairTest {
 
     @Test
     void materialCountScalesWithMissingDurability() {
-        int count = formulas.materialRepairCount(8, 216, 240, 64);
+        int count = formulas.materialRepairCount(8, 216, 240, 64, 1.0);
         assertEquals(4, count);
+    }
+
+    @Test
+    void enchantPenaltyLetsExtraMaterialsFinishANearlyFullRepair() {
+        double factor = 0.9;
+        int craftCost = 3;
+        int max = 1561;
+        double yFull = formulas.fullRepairMaterialCost(craftCost);
+        int damage = (int) Math.floor(max / yFull) - 1;
+
+        assertTrue(
+                formulas.materialsForCurrentDamage(craftCost, damage, max, 1.0) <= 1.0,
+                "Setup should sit inside the old one-material ceiling"
+        );
+        assertTrue(
+                (1.0 / yFull) * max * factor < damage,
+                "One material at this factor should leave the item short of full"
+        );
+
+        int count = formulas.materialRepairCount(craftCost, damage, max, 64, factor);
+        assertTrue(count > 1, "Expected a second material to be consumed, got " + count);
+        double restored = Math.min(damage, (count / yFull) * max * factor);
+        assertEquals(damage, restored, 0.5, "Offered stack should cover the remaining damage");
+    }
+
+    @Test
+    void halfMaterialEfficacyDoublesUnitsNeeded() {
+        double baseline = formulas.materialsForCurrentDamage(8, 200, 240, 1.0);
+        double half = formulas.materialsForCurrentDamage(8, 200, 240, 1.0, 0.5);
+        assertEquals(baseline * 2, half, 1e-9);
+    }
+
+    @Test
+    void doubleMaterialEfficacyHalvesUnitsNeeded() {
+        double baseline = formulas.materialsForCurrentDamage(8, 200, 240, 1.0);
+        double doubled = formulas.materialsForCurrentDamage(8, 200, 240, 1.0, 2.0);
+        assertEquals(baseline / 2, doubled, 1e-9);
     }
 
     @Test

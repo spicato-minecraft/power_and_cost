@@ -2,6 +2,7 @@ package power_and_cost.mixin;
 
 import power_and_cost.PowerAndCost;
 import power_and_cost.anvil.LikeItemTransfer;
+import power_and_cost.anvil.NetheriteRepairMaterials;
 import power_and_cost.power.AnvilCostFormulas;
 import power_and_cost.power.PowerLevelCalculator;
 import net.minecraft.network.chat.Component;
@@ -138,7 +139,11 @@ public abstract class AnvilMenuMixin {
         }
 
         if (result.isEmpty()) {
-            applyLikeItemTransfer(self, left, right);
+            if (NetheriteRepairMaterials.isAlternateMaterial(left, right)) {
+                applyNetheriteAlternateRepair(self, left, right);
+            } else {
+                applyLikeItemTransfer(self, left, right);
+            }
             return;
         }
 
@@ -167,15 +172,18 @@ public abstract class AnvilMenuMixin {
 
         if (isRepairMaterial(left, right)) {
             int craftCost = calc.computeItemCraftCost(left);
+            double factor = formulas.durabilityRepairFactor(leftEnchant);
+            double materialEfficacy = NetheriteRepairMaterials.efficacyOrDefault(left, right);
             int materialCount = formulas.materialRepairCount(
                     craftCost,
                     left.getDamageValue(),
                     left.getMaxDamage(),
-                    right.getCount()
+                    right.getCount(),
+                    factor,
+                    materialEfficacy
             );
             repairItemCountCost = materialCount;
-            double factor = formulas.durabilityRepairFactor(leftEnchant);
-            applyMaterialRepairDurability(left, result, craftCost, materialCount, factor);
+            applyMaterialRepairDurability(left, result, craftCost, materialCount, factor, materialEfficacy);
             cost.set(computeOurCost());
             return;
         }
@@ -221,7 +229,62 @@ public abstract class AnvilMenuMixin {
 
     @Unique
     private static boolean isRepairMaterial(ItemStack left, ItemStack right) {
-        return left.isDamageableItem() && left.isValidRepairItem(right);
+        return left.isDamageableItem()
+                && (left.isValidRepairItem(right) || NetheriteRepairMaterials.isAlternateMaterial(left, right));
+    }
+
+    /**
+     * Vanilla rejects diamonds and netherite scraps as netherite repair materials, so the result
+     * slot is empty. Fill it here using the same material-repair math as a normal ingot repair.
+     */
+    @Unique
+    private void applyNetheriteAlternateRepair(AbstractContainerMenu self, ItemStack left, ItemStack right) {
+        if (left.getDamageValue() <= 0) {
+            return;
+        }
+        double materialEfficacy = NetheriteRepairMaterials.efficacy(left, right);
+        if (materialEfficacy <= 0) {
+            return;
+        }
+
+        PowerLevelCalculator calc = PowerAndCost.POWER_LEVEL_CALCULATOR;
+        AnvilCostFormulas formulas = new AnvilCostFormulas(PowerAndCost.POWER_LEVEL_CONFIG);
+        int craftCost = calc.computeItemCraftCost(left);
+        double factor = formulas.durabilityRepairFactor(calc.computeEnchantmentPowerValue(left));
+        int materialCount = formulas.materialRepairCount(
+                craftCost,
+                left.getDamageValue(),
+                left.getMaxDamage(),
+                right.getCount(),
+                factor,
+                materialEfficacy
+        );
+        if (materialCount <= 0) {
+            return;
+        }
+
+        ItemStack repaired = left.copy();
+        applyAnvilName(repaired, left, right);
+        int newDamage = formulas.damageAfterMaterialRepair(
+                craftCost,
+                materialCount,
+                left,
+                factor,
+                materialEfficacy
+        );
+        if (newDamage == left.getDamageValue()) {
+            return;
+        }
+        repaired.setDamageValue(newDamage);
+
+        power_and_cost$applyingTransfer = true;
+        try {
+            self.getSlot(RESULT_SLOT_INDEX).set(repaired);
+            repairItemCountCost = materialCount;
+            cost.set(computeOurCost());
+        } finally {
+            power_and_cost$applyingTransfer = false;
+        }
     }
 
     @Unique
@@ -292,7 +355,8 @@ public abstract class AnvilMenuMixin {
             ItemStack result,
             int craftCost,
             int materialCount,
-            double enchantEfficacyFactor
+            double enchantEfficacyFactor,
+            double materialEfficacy
     ) {
         if (!left.isDamageableItem() || !result.isDamageableItem() || materialCount <= 0) {
             return;
@@ -302,7 +366,8 @@ public abstract class AnvilMenuMixin {
                 craftCost,
                 materialCount,
                 left,
-                enchantEfficacyFactor
+                enchantEfficacyFactor,
+                materialEfficacy
         );
         if (newDamage == left.getDamageValue()) {
             return;

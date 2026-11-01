@@ -58,25 +58,78 @@ public final class AnvilCostFormulas {
     }
 
     /**
-     * Materials needed to repair the current damage (before enchant efficacy).
+     * Materials needed to repair the current damage after enchant efficacy.
+     * A factor below 1 raises the count so extra materials can still reach a full fix.
      */
-    public double materialsForCurrentDamage(int itemCraftCost, int damage, int maxDamage) {
-        if (damage <= 0 || maxDamage <= 0) {
-            return 0;
-        }
-        return fullRepairMaterialCost(itemCraftCost) * (damage / (double) maxDamage);
+    public double materialsForCurrentDamage(
+            int itemCraftCost,
+            int damage,
+            int maxDamage,
+            double enchantEfficacyFactor
+    ) {
+        return materialsForCurrentDamage(itemCraftCost, damage, maxDamage, enchantEfficacyFactor, 1.0);
     }
 
     /**
-     * Whole materials consumed this repair: everything offered, up to the ceiling needed for a full fix.
-     * Efficacy is fractional ({@code materials / yFull} of max durability); 4 mats on a 4.20-y chestplate
-     * does not fully repair.
+     * @param materialEfficacy durability each unit restores relative to the recipe-size rate.
+     *                         {@code 0.5} needs twice as many units; {@code 2} needs half as many.
      */
-    public int materialRepairCount(int itemCraftCost, int damage, int maxDamage, int availableMaterials) {
-        if (damage <= 0 || availableMaterials <= 0) {
+    public double materialsForCurrentDamage(
+            int itemCraftCost,
+            int damage,
+            int maxDamage,
+            double enchantEfficacyFactor,
+            double materialEfficacy
+    ) {
+        if (damage <= 0 || maxDamage <= 0 || enchantEfficacyFactor <= 0 || materialEfficacy <= 0) {
             return 0;
         }
-        double materialsForFullFix = materialsForCurrentDamage(itemCraftCost, damage, maxDamage);
+        return fullRepairMaterialCost(itemCraftCost)
+                * (damage / (double) maxDamage)
+                / (enchantEfficacyFactor * materialEfficacy);
+    }
+
+    /**
+     * Whole materials consumed this repair: everything offered, up to the ceiling needed for a full fix
+     * after enchant efficacy. Each material restores {@code 1/yFull} of max durability, then scaled by
+     * that factor. The ceiling uses the same factor, so a second diamond can finish a repair that one
+     * diamond left short.
+     */
+    public int materialRepairCount(
+            int itemCraftCost,
+            int damage,
+            int maxDamage,
+            int availableMaterials,
+            double enchantEfficacyFactor
+    ) {
+        return materialRepairCount(
+                itemCraftCost,
+                damage,
+                maxDamage,
+                availableMaterials,
+                enchantEfficacyFactor,
+                1.0
+        );
+    }
+
+    public int materialRepairCount(
+            int itemCraftCost,
+            int damage,
+            int maxDamage,
+            int availableMaterials,
+            double enchantEfficacyFactor,
+            double materialEfficacy
+    ) {
+        if (damage <= 0 || availableMaterials <= 0 || enchantEfficacyFactor <= 0 || materialEfficacy <= 0) {
+            return 0;
+        }
+        double materialsForFullFix = materialsForCurrentDamage(
+                itemCraftCost,
+                damage,
+                maxDamage,
+                enchantEfficacyFactor,
+                materialEfficacy
+        );
         int toFullyRepair = (int) Math.ceil(materialsForFullFix - 1e-9);
         int count = Math.min(availableMaterials, toFullyRepair);
         return Math.max(1, count);
@@ -91,7 +144,17 @@ public final class AnvilCostFormulas {
             ItemStack item,
             double enchantEfficacyFactor
     ) {
-        if (materialCount <= 0 || !item.isDamageableItem() || enchantEfficacyFactor <= 0) {
+        return durabilityRestoredAfterEnchant(itemCraftCost, materialCount, item, enchantEfficacyFactor, 1.0);
+    }
+
+    public double durabilityRestoredAfterEnchant(
+            int itemCraftCost,
+            int materialCount,
+            ItemStack item,
+            double enchantEfficacyFactor,
+            double materialEfficacy
+    ) {
+        if (materialCount <= 0 || !item.isDamageableItem() || enchantEfficacyFactor <= 0 || materialEfficacy <= 0) {
             return 0;
         }
         int damage = item.getDamageValue();
@@ -100,7 +163,7 @@ public final class AnvilCostFormulas {
             return 0;
         }
         double yFull = fullRepairMaterialCost(itemCraftCost);
-        double restored = (materialCount / yFull) * maxDamage * enchantEfficacyFactor;
+        double restored = (materialCount / yFull) * maxDamage * enchantEfficacyFactor * materialEfficacy;
         return Math.min(damage, restored);
     }
 
@@ -113,6 +176,16 @@ public final class AnvilCostFormulas {
             ItemStack item,
             double enchantEfficacyFactor
     ) {
+        return damageAfterMaterialRepair(itemCraftCost, materialCount, item, enchantEfficacyFactor, 1.0);
+    }
+
+    public int damageAfterMaterialRepair(
+            int itemCraftCost,
+            int materialCount,
+            ItemStack item,
+            double enchantEfficacyFactor,
+            double materialEfficacy
+    ) {
         int damage = item.getDamageValue();
         int maxDamage = item.getMaxDamage();
         if (damage <= 0) {
@@ -122,7 +195,8 @@ public final class AnvilCostFormulas {
                 itemCraftCost,
                 materialCount,
                 item,
-                enchantEfficacyFactor
+                enchantEfficacyFactor,
+                materialEfficacy
         );
         int newDamage = Math.max(0, damage - (int) Math.round(restored));
         int snapThreshold = Math.max(1, (int) Math.floor(maxDamage * 0.005 + 0.5));
